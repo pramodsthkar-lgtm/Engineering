@@ -35,10 +35,13 @@ import {
   BrainCircuit,
   GitPullRequest,
   Activity,
-  Code2
+  Code2,
+  Wand2,
+  Sparkles,
+  Loader2
 } from 'lucide-react';
 
-type ViewState = 'dashboard' | 'new_job' | 'project_detail' | 'repair_execution' | 'report' | 'ai_assistant' | 'settings' | 'billing';
+type ViewState = 'dashboard' | 'new_job' | 'project_detail' | 'repair_execution' | 'report' | 'ai_assistant' | 'settings' | 'billing' | 'ai_builder' | 'builder_execution';
 
 // --- MOCK DATA ---
 const PROJECTS = [
@@ -109,6 +112,11 @@ export default function RepairPlatform() {
     { role: 'ai', text: 'Hello! I am your Autonomous Website Engineer. I learn from every repair and can help you maintain your digital infrastructure. How can I assist you today?' }
   ]);
 
+  // Builder State
+  const [builderPrompt, setBuilderPrompt] = useState('');
+  const [builderProgress, setBuilderProgress] = useState(0);
+  const [builderLogs, setBuilderLogs] = useState<{stage: string, log: string}[]>([]);
+
   useEffect(() => {
     if (logContainerRef.current) {
       logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -157,6 +165,37 @@ export default function RepairPlatform() {
     }, 1000);
   };
 
+  const startWebsiteGeneration = () => {
+    if (!builderPrompt.trim()) return;
+    setCurrentView('builder_execution');
+    setBuilderLogs([]);
+    setBuilderProgress(0);
+    
+    const BUILDER_STEPS = [
+      { stage: 'design', log: "[AI ARCHITECT] Analyzing prompt and generating optimal layout..." },
+      { stage: 'design', log: "[AI ARCHITECT] Selecting Tailwind CSS color palette and typography..." },
+      { stage: 'code', log: "[AI CODER] Scaffolding Next.js application..." },
+      { stage: 'code', log: "[AI CODER] Writing reusable React components (Hero, Features, Footer)..." },
+      { stage: 'code', log: "[AI CODER] Implementing responsive grid and mobile navigation..." },
+      { stage: 'code', log: "[AI CODER] Wiring up mock API integration..." },
+      { stage: 'deploy', log: "[DEPLOYMENT AGENT] Initializing GitHub repository..." },
+      { stage: 'deploy', log: "[DEPLOYMENT AGENT] Pushing compiled code to 'main' branch..." },
+      { stage: 'deploy', log: "[DEPLOYMENT AGENT] Triggering Vercel build pipeline..." },
+      { stage: 'deploy', log: "[SYSTEM] Website generated and deployed successfully! Live URL ready." }
+    ];
+
+    let step = 0;
+    const interval = setInterval(() => {
+      if (step < BUILDER_STEPS.length) {
+        setBuilderLogs(prev => [...prev, BUILDER_STEPS[step]]);
+        setBuilderProgress(Math.floor(((step + 1) / BUILDER_STEPS.length) * 100));
+        step++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300 flex overflow-hidden font-sans">
       
@@ -187,6 +226,12 @@ export default function RepairPlatform() {
             label="AI Chat Assistant" 
             active={currentView === 'ai_assistant'} 
             onClick={() => setCurrentView('ai_assistant')} 
+          />
+          <SidebarItem 
+            icon={Sparkles} 
+            label="AI Website Builder" 
+            active={currentView === 'ai_builder'} 
+            onClick={() => setCurrentView('ai_builder')} 
           />
           <SidebarItem 
             icon={History} 
@@ -898,6 +943,127 @@ export default function RepairPlatform() {
                       </ul>
                       <button className="w-full py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-medium transition-colors">Pay with UPI / Stripe</button>
                     </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* AI BUILDER VIEW */}
+              {currentView === 'ai_builder' && (
+                <motion.div
+                  key="ai_builder"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="max-w-4xl mx-auto space-y-8"
+                >
+                  <div className="text-center space-y-3 mb-10">
+                    <div className="w-16 h-16 bg-fuchsia-500/20 border border-fuchsia-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-fuchsia-400">
+                      <Sparkles size={32} />
+                    </div>
+                    <h2 className="text-3xl font-display font-semibold text-zinc-100">AI Prompt-to-Website Builder</h2>
+                    <p className="text-zinc-400 text-sm max-w-xl mx-auto">Describe the website you want to build in plain English or Hindi. Our AI Architect will design, code, and deploy a fully functional Next.js application in minutes.</p>
+                  </div>
+
+                  <div className="bg-zinc-900/50 border border-zinc-800/50 p-6 rounded-2xl backdrop-blur-sm shadow-xl space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-zinc-300 mb-2">What do you want to build?</label>
+                      <textarea
+                        className="w-full h-40 bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-fuchsia-500/50 focus:ring-1 focus:ring-fuchsia-500/50 transition-all resize-none"
+                        placeholder="e.g. 'Ek real estate agency ke liye modern website banao jisme properties ki listing ho, contact form ho, aur dark mode support kare...'"
+                        value={builderPrompt}
+                        onChange={(e) => setBuilderPrompt(e.target.value)}
+                      />
+                    </div>
+                    <button
+                      onClick={startWebsiteGeneration}
+                      disabled={!builderPrompt.trim()}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-fuchsia-600 to-indigo-600 hover:from-fuchsia-500 hover:to-indigo-500 text-white font-medium flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Wand2 size={20} />
+                      Generate & Deploy Website
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* BUILDER EXECUTION VIEW */}
+              {currentView === 'builder_execution' && (
+                <motion.div
+                  key="builder_execution"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="max-w-4xl mx-auto space-y-6 h-full flex flex-col"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-display font-semibold text-zinc-100 flex items-center gap-3">
+                        <Loader2 size={24} className="text-fuchsia-400 animate-spin" />
+                        Generating Website...
+                      </h2>
+                      <p className="text-sm text-zinc-400 mt-1 truncate max-w-md">"{builderPrompt}"</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-display font-bold text-fuchsia-400">{builderProgress}%</div>
+                      <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Progress</div>
+                    </div>
+                  </div>
+
+                  <div className="w-full h-2 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500"
+                      initial={{ width: '0%' }}
+                      animate={{ width: `${builderProgress}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+
+                  <div className="flex-1 bg-black/60 border border-zinc-800/80 rounded-xl overflow-hidden flex flex-col font-mono text-sm shadow-2xl relative backdrop-blur-md min-h-[400px]">
+                    <div className="h-10 bg-zinc-900/80 border-b border-zinc-800 flex items-center px-4 gap-2 shrink-0">
+                      <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                      <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/50"></div>
+                      <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/50"></div>
+                      <span className="ml-4 text-xs text-zinc-500 font-medium">auto-builder.sh — AI Architect</span>
+                    </div>
+                    <div className="p-4 overflow-y-auto flex-1 space-y-2">
+                      {builderLogs.map((log, i) => (
+                        <motion.div 
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          key={i} 
+                          className="flex gap-3"
+                        >
+                          <span className="text-zinc-600 shrink-0">[{new Date().toLocaleTimeString().split(' ')[0]}]</span>
+                          <span className={
+                            log.stage === 'design' ? 'text-fuchsia-400' :
+                            log.stage === 'code' ? 'text-indigo-400' :
+                            'text-emerald-400'
+                          }>
+                            {log.log}
+                          </span>
+                        </motion.div>
+                      ))}
+                      {builderProgress < 100 && (
+                        <div className="flex gap-3 animate-pulse">
+                          <span className="text-zinc-600">[{new Date().toLocaleTimeString().split(' ')[0]}]</span>
+                          <span className="text-zinc-500">_</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {builderProgress === 100 && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2"
+                      >
+                        <button 
+                          onClick={() => setCurrentView('dashboard')}
+                          className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-medium rounded-full flex items-center gap-2 shadow-lg shadow-emerald-500/25 transition-all"
+                        >
+                          <Globe size={18} />
+                          Visit Live Website
+                        </button>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               )}
